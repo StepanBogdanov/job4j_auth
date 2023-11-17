@@ -9,6 +9,7 @@ import ru.job4j.auth.domain.Person;
 import ru.job4j.auth.repository.PersonRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -22,35 +23,38 @@ public class SimplePersonService implements PersonService {
     }
 
     @Override
-    public ResponseEntity<Person> findById(int id) {
-        var person = persons.findById(id);
-        return new ResponseEntity<Person>(
-                person.orElse(new Person()),
-                person.isPresent() ? HttpStatus.OK : HttpStatus.NOT_FOUND
-        );    }
+    public Optional<Person> findById(int id) {
+        return persons.findById(id);
+    }
 
     @Override
-    public ResponseEntity<Person> create(Person person) {
-        return new ResponseEntity<Person>(
-                persons.save(person),
-                HttpStatus.CREATED
-        );    }
+    public Optional<Person> create(Person person) {
+        try {
+            persons.save(person);
+            return Optional.of(person);
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+        return Optional.empty();
+    }
 
     @Override
-    public ResponseEntity<Void> update(Person person) {
+    public boolean update(Person person) {
         if (!persons.existsById(person.getId())) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "A person with this ID has not been found");
+            return false;
         }
         persons.save(person);
-        return ResponseEntity.ok().build();    }
+        return true;
+    }
 
     @Override
-    public ResponseEntity<Void> delete(int id) {
+    public boolean delete(int id) {
         if (!persons.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "A person with this ID has not been found");
+            return false;
         }
         Person person = new Person();
         person.setId(id);
         persons.delete(person);
-        return ResponseEntity.ok().build();    }
+        return true;
+    }
 }

@@ -4,16 +4,17 @@ import org.springframework.http.ResponseEntity;
 import ru.job4j.auth.domain.Person;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface PersonService {
 
     List<Person> findAll();
 
-    ResponseEntity<Person> findById(int id);
+    Optional<Person> findById(int id);
 
-    ResponseEntity<Person> create(Person person);
+    Optional<Person> create(Person person);
 
-    ResponseEntity<Void> update(Person person);
+    boolean update(Person person);
 
-    ResponseEntity<Void> delete(int id);
+    boolean delete(int id);
 }
