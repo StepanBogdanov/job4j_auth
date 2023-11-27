@@ -11,6 +11,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.auth.domain.Person;
+import ru.job4j.auth.dto.PersonDto;
 import ru.job4j.auth.service.PersonService;
 
 import javax.servlet.http.HttpServletRequest;
@@ -74,6 +75,17 @@ public class PersonController {
         if (!personService.update(person)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "A person with this ID has not been found");
         }
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping
+    public ResponseEntity<Void> updatePassword(@RequestBody PersonDto personDto) {
+        var current = personService.findById(personDto.getId());
+        if (current.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "A person with this ID has not been found");
+        }
+        current.get().setPassword(encoder.encode(personDto.getPassword()));
+        personService.update(current.get());
         return ResponseEntity.ok().build();
     }
 
