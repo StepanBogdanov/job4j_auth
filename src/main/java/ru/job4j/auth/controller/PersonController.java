@@ -16,6 +16,7 @@ import ru.job4j.auth.service.PersonService;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -50,18 +51,8 @@ public class PersonController {
     }
 
     @PostMapping("/sign-up")
-    public ResponseEntity<Person> create(@RequestBody Person person) {
-        String pat = "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9@#$%]).{8,}";
-        String login = person.getLogin();
+    public ResponseEntity<Person> create(@Valid @RequestBody Person person) {
         String pass = person.getPassword();
-        if (login == null || pass == null) {
-            throw new NullPointerException("Login and password mustn't be empty");
-        }
-        if (!pass.matches(pat)) {
-            throw new IllegalArgumentException("Invalid password. Password length must be more than 8 characters. "
-                    + "Password must contain at least 1 uppercase letter, one lowercase letter and either a special "
-                    + "character or a number");
-        }
         person.setPassword(encoder.encode(pass));
         var savedPerson = personService.create(person);
         return new ResponseEntity<Person>(
@@ -71,7 +62,7 @@ public class PersonController {
     }
 
     @PutMapping("/")
-    public ResponseEntity<Void> update(@RequestBody Person person) {
+    public ResponseEntity<Void> update(@Valid @RequestBody Person person) {
         if (!personService.update(person)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "A person with this ID has not been found");
         }
@@ -79,7 +70,7 @@ public class PersonController {
     }
 
     @PatchMapping
-    public ResponseEntity<Void> updatePassword(@RequestBody PersonDto personDto) {
+    public ResponseEntity<Void> updatePassword(@Valid @RequestBody PersonDto personDto) {
         var current = personService.findById(personDto.getId());
         if (current.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "A person with this ID has not been found");
@@ -97,15 +88,5 @@ public class PersonController {
         return ResponseEntity.ok().build();
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public void exceptionHandler(Exception e, HttpServletRequest request, HttpServletResponse response) throws IOException {
-        response.setStatus(HttpStatus.BAD_REQUEST.value());
-        response.setContentType("application/json");
-        response.getWriter().write(objectMapper.writeValueAsString(new HashMap<>() { {
-            put("message", e.getMessage());
-            put("type", e.getClass());
-        }}));
-        LOGGER.error(e.getLocalizedMessage());
-    }
 }
 
